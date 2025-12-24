@@ -6,7 +6,6 @@
 ---
 
 ## 🧠 Architectural Overview (AI-Readiness)
-*This section is optimized for LLM-based agents to understand the system state.*
 
 ### 1. The Core Infrastructure
 - **Placement**: A Coordinator contract is designed for **Pallet-Revive** (Polkadot's RISC-V EVM-compatible layer).
