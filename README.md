@@ -85,3 +85,6 @@ npm install
 
 ## ⚖️ License
 Released as open-source for the Polkadot ecosystem. Purge your dust, keep your USDC.
+
+---
+*Last Updated: 2025-12-23T19:43:22-06:00 (Alpha v1.1.1)*
