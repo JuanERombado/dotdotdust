@@ -1,11 +1,11 @@
-import express from "express";
+import express, { Express, Request, Response } from "express";
 import { ethers } from "ethers";
 import { ApiPromise, WsProvider } from "@polkadot/api";
 import dotenv from "dotenv";
 
 dotenv.config();
 
-const app = express();
+const app: Express = express();
 app.use(express.json());
 
 // Configuration
@@ -47,7 +47,32 @@ async function getOmnipoolPrice(assetId: string) {
 }
 
 /**
- * 2. DISPATCHER
+ * 2. PRE-FLIGHT VERIFICATION
+ * Checks if the assets have actually arrived at the destination vault 
+ * on Hydration before the relayer spends gas.
+ */
+async function checkDestinationVault(userAddress: string, assets: string[]) {
+    const provider = new WsProvider(HYDRA_RPC);
+    const api = await ApiPromise.create({ provider });
+    
+    try {
+        // Query assets on Hydration for the user (or proxy)
+        // In Step 2, the assets should already be there.
+        for (const assetId of assets) {
+            const balance: any = await api.query.tokens.accounts(userAddress, assetId);
+            if (balance.free.isZero()) {
+                console.warn(`[Pre-flight] Asset ${assetId} not found in user account on Hydration.`);
+                return false;
+            }
+        }
+        return true;
+    } finally {
+        await api.disconnect();
+    }
+}
+
+/**
+ * 3. DISPATCHER
  * Verifies User signature and submits the sponsored transaction.
  */
 app.post("/purge", async (req, res) => {
@@ -64,7 +89,16 @@ app.post("/purge", async (req, res) => {
         return res.status(401).json({ error: "Invalid signature. Authentication failed." });
     }
 
-    // 1. Check Gatekeeper (Relayer-side safety)
+    // 1. Pre-flight Check (Griefing Protection)
+    const assetsArrived = await checkDestinationVault(userAddress, assets);
+    if (!assetsArrived) {
+        return res.status(400).json({ 
+            error: "Pre-flight failed. Assets not detected on Hydration yet. Wait for XCM completion." 
+        });
+    }
+
+    // 2. Check Gatekeeper (Relayer-side safety)
+
 
     let totalValue = 0;
     for (const asset of assets) {

@@ -9,11 +9,12 @@ export interface AssetCandidate {
   chain: string; // e.g., "Astar"
   symbol: string;
   amount: bigint;
-  decimals: number;
-  usdPrice: number;
+  estimatedValueDot: number;
+  isSufficient: boolean;
+  nativeBalance: bigint; // Changed back to bigint for parity with on-chain data
+  sourceChainXcmFee: number; // New: Estimated gas to send XCM from source
   isNative: boolean;
-  isSufficient: boolean; // True if asset handles its own ED
-  userNativeBalance: bigint; // User's balance of the chain's native token (for fees)
+  decimals: number;
 }
 
 export interface PurgeDecision {
@@ -39,16 +40,40 @@ export function analyzePurgeability(assets: AssetCandidate[]): PurgeDecision {
     // Formula: (Amount / 10^Decimals) * PriceUSD / DOT_PriceUSD
     // For prototype, we assume usdPrice IS the value in nominal DOT (1 = 1 DOT)
     // REAL WORLD: Need real oracle or price feed.
-    const nominalAmount = Number(asset.amount) / Math.pow(10, asset.decimals);
-    const valueInDOT = nominalAmount * asset.usdPrice;
+    // const nominalAmount = Number(asset.amount) / Math.pow(10, asset.decimals); // This is now replaced by estimatedValueDot
+    const valueInDOT = asset.estimatedValueDot; // Use the pre-calculated estimatedValueDot
     
     totalBatchValueDOT += valueInDOT;
 
     // 2. Dust Trap Check (Non-Sufficient Asset + Zero Native Balance)
     // If you hold "JunkToken" on Astar, but 0 ASTR, you cannot pay the transfer fee.
     // XCM cannot "pull" without a fee paid on Source.
-    if (!asset.isNative && !asset.isSufficient && asset.userNativeBalance === BigInt(0)) {
+    if (!asset.isNative && !asset.isSufficient && asset.nativeBalance === BigInt(0)) {
         hasDustTrap = true;
+    }
+
+    // 3. Fee Stack Calculation (v1.2)
+    // The cost to move a token includes:
+    // Source XCM Fee + Destination Xcm Fee + Relayer Rebate + Commission
+    const DEST_XCM_FEE_DOT = 0.005; // ~0.005 DOT
+    const RELAYER_REBATE_DOT = 0.002; // Small gas rebate for relayer
+    const totalFees = asset.sourceChainXcmFee + DEST_XCM_FEE_DOT + RELAYER_REBATE_DOT;
+    const valueAfterFees = asset.estimatedValueDot - totalFees;
+
+    if (valueAfterFees <= 0) {
+        return {
+            status: "BURN", // Changed from 'decision' to 'status' for consistency
+            reason: `Fees (${totalFees.toFixed(3)} DOT) exceed asset value. Clearing recommended to free up space.`
+        };
+    }
+    
+    // 4. The 0.05 DOT Net-Gatekeeper
+    // We only purge if the final value is significant enough
+    if (valueAfterFees < 0.05) {
+        return {
+            status: "BURN", // Changed from 'decision' to 'status' for consistency
+            reason: `Net value (${valueAfterFees.toFixed(3)} DOT) is below the 0.05 threshold.`
+        };
     }
   }
 

@@ -5,22 +5,29 @@ import WalletConnect from "@/components/WalletConnect";
 import { analyzePurgeability, AssetCandidate, PurgeDecision } from "@/lib/dust-logic";
 import { ArrowRight, Flame, Trash2, AlertTriangle, ShieldAlert } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
+import { Button } from "@/components/ui/button"; // Assuming this import is needed for the new Button component
 
 // MOCK DATA GENERATOR
 const generateMockDust = (walletDefined: boolean): AssetCandidate[] => {
   if (!walletDefined) return [];
   return [
-    { chain: "Astar", symbol: "ASTR", amount: BigInt(4500000000000000000), decimals: 18, usdPrice: 0.06, isNative: true, isSufficient: true, userNativeBalance: BigInt(100) }, // ~0.27 USD
-    { chain: "Moonbeam", symbol: "GLMR", amount: BigInt(1200000000000000000), decimals: 18, usdPrice: 0.20, isNative: true, isSufficient: true, userNativeBalance: BigInt(100) }, // ~0.24 USD
-    { chain: "Phala", symbol: "PHA", amount: BigInt(500000000000), decimals: 12, usdPrice: 0.11, isNative: true, isSufficient: true, userNativeBalance: BigInt(100) }, // ~0.05 USD
-    { chain: "Polkadot", symbol: "DOT", amount: BigInt(200000000), decimals: 10, usdPrice: 5.00, isNative: true, isSufficient: true, userNativeBalance: BigInt(100) }, // ~0.10 USD (0.02 DOT)
+    { chain: "Astar", symbol: "ASTR", amount: BigInt(4500000000000000000), decimals: 18, isNative: true, isSufficient: true, estimatedValueDot: 0.27, nativeBalance: BigInt(100), sourceChainXcmFee: 0.001 },
+    { chain: "Moonbeam", symbol: "GLMR", amount: BigInt(1200000000000000000), decimals: 18, isNative: true, isSufficient: true, estimatedValueDot: 0.12, nativeBalance: BigInt(15000000000000000), sourceChainXcmFee: 0.01 },
+    { chain: "Phala", symbol: "PHA", amount: BigInt(500000000000), decimals: 12, isNative: true, isSufficient: true, estimatedValueDot: 0.08, nativeBalance: BigInt(10000000000000), sourceChainXcmFee: 0.005 },
+    { chain: "Polkadot", symbol: "DOT", amount: BigInt(200000000), decimals: 10, isNative: true, isSufficient: true, estimatedValueDot: 0.10, nativeBalance: BigInt(1000000000), sourceChainXcmFee: 0.001 },
     // The TRAP
-    { chain: "Interlay", symbol: "iBTC", amount: BigInt(300), decimals: 8, usdPrice: 60000, isNative: false, isSufficient: false, userNativeBalance: BigInt(0) }, // ~0.18 USD but NO Native INTR
+    { chain: "Interlay", symbol: "iBTC", amount: BigInt(300), decimals: 8, isNative: false, isSufficient: false, estimatedValueDot: 0.04, nativeBalance: BigInt(0), sourceChainXcmFee: 0.02 },
   ];
 };
 
 export default function Home() {
   const [accounts, setAccounts] = useState<any[]>([]);
+  const [step, setStep] = useState<1 | 2>(1);
+  const [xcmTxHash, setXcmTxHash] = useState<string | null>(null);
+  const [relayerStatus, setRelayerStatus] = useState<string | null>(null);
+
+  // Constants
+  const MIN_DOT_THRESHOLD = 0.05;
   const [dustAssets, setDustAssets] = useState<AssetCandidate[]>([]);
   const [batch, setBatch] = useState<AssetCandidate[]>([]);
   const [decision, setDecision] = useState<PurgeDecision>({ status: "BURN", reason: "Batch empty" });
