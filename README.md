@@ -54,9 +54,14 @@ The current `Sweeper.sol` emits events and accepts data but does not construct t
 - **Current state**: Environment is currently unstable for automated CI/CD.
 - **The Challenge**: Ensuring the RISC-V output is deterministic. Hardhat/Foundry plugins for Revive are still experimental.
 
-### 4. Paying Fees with Dust
-- **Hydration Feature**: Hydration allows paying fees in assets. However, getting the assets *to* Hydration first still requires a fee on the *Source Chain*.
-- **The "Holy Grail"**: Implement "Sponsored XCM" or "Fee-Less Transfers" where the `Sweeper.sol` contract covers the source gas and deducts it from the final sweep.
+### 4. Paying Fees with Dust (The "Relayer-Sponsored" Model)
+- **The Solver**: Implementation of the **Relayer-Sponsored Pattern**. 
+- **UX**: User signs an off-chain permission -> Relayer pays native gas on Astar/Moonbeam -> Contract teleports dust to Hydration.
+- **Reimbursement**: The contract calculates a `gas_rebate` (e.g., +5%) which is sent to the Relayer address upon successful swap.
+
+### 5. Hydration Omnipool as Source-of-Truth
+- **Logic**: We query `hydradxRuntime::omnipool` RPC for real-time liquidity prices.
+- **Safety**: Filtering assets against the `Omnipool.supported_assets()` registry to prevent sending "unswappable" junk.
 
 ---
 
