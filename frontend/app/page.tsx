@@ -11,10 +11,10 @@ import { Button } from "@/components/ui/button"; // Assuming this import is need
 const generateMockDust = (walletDefined: boolean): AssetCandidate[] => {
   if (!walletDefined) return [];
   return [
-    { chain: "Astar", symbol: "ASTR", amount: BigInt(4500000000000000000), decimals: 18, isNative: true, isSufficient: true, estimatedValueDot: 0.27, nativeBalance: BigInt(100), sourceChainXcmFee: 0.001 },
-    { chain: "Moonbeam", symbol: "GLMR", amount: BigInt(1200000000000000000), decimals: 18, isNative: true, isSufficient: true, estimatedValueDot: 0.12, nativeBalance: BigInt(15000000000000000), sourceChainXcmFee: 0.01 },
-    { chain: "Phala", symbol: "PHA", amount: BigInt(500000000000), decimals: 12, isNative: true, isSufficient: true, estimatedValueDot: 0.08, nativeBalance: BigInt(10000000000000), sourceChainXcmFee: 0.005 },
-    { chain: "Polkadot", symbol: "DOT", amount: BigInt(200000000), decimals: 10, isNative: true, isSufficient: true, estimatedValueDot: 0.10, nativeBalance: BigInt(1000000000), sourceChainXcmFee: 0.001 },
+    { chain: "Polkadot", symbol: "DOT", amount: BigInt(200000000), decimals: 10, isNative: true, isSufficient: true, estimatedValueDot: 0.10, nativeBalance: BigInt(1000000000), sourceChainXcmFee: 0.001 }, // TIER 1
+    { chain: "Astar", symbol: "ASTR", amount: BigInt(4500000000000000000), decimals: 18, isNative: true, isSufficient: true, estimatedValueDot: 0.27, nativeBalance: BigInt(100), sourceChainXcmFee: 0.01 }, // TIER 2 (will result in ~0.03 DOT fee)
+    { chain: "Moonbeam", symbol: "GLMR", amount: BigInt(1200000000000000000), decimals: 18, isNative: true, isSufficient: true, estimatedValueDot: 0.08, nativeBalance: BigInt(15000000000000000), sourceChainXcmFee: 0.02 }, // TIER 2 (High fee, low value)
+    { chain: "Hydration", symbol: "HDX", amount: BigInt(500000000000), decimals: 12, isNative: true, isSufficient: true, estimatedValueDot: 0.08, nativeBalance: BigInt(10000000000000), sourceChainXcmFee: 0.001 }, // TIER 1
     // The TRAP
     { chain: "Interlay", symbol: "iBTC", amount: BigInt(300), decimals: 8, isNative: false, isSufficient: false, estimatedValueDot: 0.04, nativeBalance: BigInt(0), sourceChainXcmFee: 0.02 },
   ];

@@ -11,11 +11,28 @@ export interface AssetCandidate {
   amount: bigint;
   estimatedValueDot: number;
   isSufficient: boolean;
-  nativeBalance: bigint; // Changed back to bigint for parity with on-chain data
-  sourceChainXcmFee: number; // New: Estimated gas to send XCM from source
+  nativeBalance: bigint; 
+  sourceChainXcmFee: number;
   isNative: boolean;
   decimals: number;
 }
+
+export type RoutingTier = "TIER_1_DIRECT" | "TIER_2_MULTI_HOP";
+
+export const ROUTING_TABLE: Record<string, RoutingTier> = {
+  "Polkadot": "TIER_1_DIRECT",
+  "Astar": "TIER_2_MULTI_HOP", // Assume multi-hop via AssetHub for Astar long-tail
+  "Moonbeam": "TIER_2_MULTI_HOP",
+  "AssetHub": "TIER_1_DIRECT",
+  "Hydration": "TIER_1_DIRECT"
+};
+
+const TIER_MULTIPLIERS = {
+  "TIER_1_DIRECT": 1.0,
+  "TIER_2_MULTI_HOP": 2.5 // Multi-hop: Source -> AssetHub -> Hydration
+};
+
+const GAS_SAFETY_BUFFER = 1.2; // 20% overhead for weight estimation volatility
 
 export interface PurgeDecision {
   status: "PURGE" | "BLOCKED" | "WARNING" | "BURN";
@@ -52,18 +69,23 @@ export function analyzePurgeability(assets: AssetCandidate[]): PurgeDecision {
         hasDustTrap = true;
     }
 
-    // 3. Fee Stack Calculation (v1.2)
+    // 3. Fee Stack Calculation (v1.3: Routing Aware)
     // The cost to move a token includes:
-    // Source XCM Fee + Destination Xcm Fee + Relayer Rebate + Commission
+    // (Source XCM Fee * Complexity Multiplier * Safety Buffer) + Destination Xcm Fee + Relayer Rebate + Commission
+    const tier = ROUTING_TABLE[asset.chain] || "TIER_2_MULTI_HOP"; // Default to safe multi-hop
+    const complexityMultiplier = TIER_MULTIPLIERS[tier];
+    
+    const adjustedSourceFee = asset.sourceChainXcmFee * complexityMultiplier * GAS_SAFETY_BUFFER;
+    
     const DEST_XCM_FEE_DOT = 0.005; // ~0.005 DOT
     const RELAYER_REBATE_DOT = 0.002; // Small gas rebate for relayer
-    const totalFees = asset.sourceChainXcmFee + DEST_XCM_FEE_DOT + RELAYER_REBATE_DOT;
+    const totalFees = adjustedSourceFee + DEST_XCM_FEE_DOT + RELAYER_REBATE_DOT;
     const valueAfterFees = asset.estimatedValueDot - totalFees;
 
     if (valueAfterFees <= 0) {
         return {
-            status: "BURN", // Changed from 'decision' to 'status' for consistency
-            reason: `Fees (${totalFees.toFixed(3)} DOT) exceed asset value. Clearing recommended to free up space.`
+            status: "BURN",
+            reason: `Fees (${totalFees.toFixed(3)} DOT) exceed asset value due to ${tier.replace('_', ' ')} complexity.`
         };
     }
     
@@ -71,8 +93,8 @@ export function analyzePurgeability(assets: AssetCandidate[]): PurgeDecision {
     // We only purge if the final value is significant enough
     if (valueAfterFees < 0.05) {
         return {
-            status: "BURN", // Changed from 'decision' to 'status' for consistency
-            reason: `Net value (${valueAfterFees.toFixed(3)} DOT) is below the 0.05 threshold.`
+            status: "BURN",
+            reason: `Net value (${valueAfterFees.toFixed(3)} DOT) is below the 0.05 threshold after complexity adjustments.`
         };
     }
   }
