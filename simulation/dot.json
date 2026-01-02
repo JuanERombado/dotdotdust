@@ -1,0 +1,4 @@
+{
+  "endpoint": "wss://rpc.polkadot.io",
+  "port": 8000
+}

@@ -1,0 +1,4 @@
+{
+  "endpoint": "wss://rpc.hydradx.cloud",
+  "port": 8002
+}

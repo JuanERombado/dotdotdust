@@ -10,10 +10,10 @@ interface IXCM {
     /// @notice Execute an XCM message via Transact.
     /// @param message The XCM message encoded as bytes.
     /// @param maxWeight The maximum weight to usage.
-    function execute_xcm(bytes calldata message, uint64 maxWeight) external payable;
+    function execute(bytes calldata message, uint64 maxWeight) external payable;
 
     /// @notice Send an XCM message (XCMP).
     /// @param dest The destination MultiLocation.
     /// @param message The XCM message.
-    function send_xcm(bytes calldata dest, bytes calldata message) external;
+    function send(bytes calldata dest, bytes calldata message) external;
 }

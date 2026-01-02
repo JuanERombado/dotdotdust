@@ -1,0 +1,4 @@
+{
+  "endpoint": "wss://rpc.astar.network",
+  "port": 8001
+}

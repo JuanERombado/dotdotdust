@@ -9,6 +9,7 @@ out/
 
 # Production
 build/
+dist/
 
 # Testing
 coverage/
@@ -23,7 +24,10 @@ yarn-debug.log*
 yarn-error.log*
 
 # Local env files
+.env
 .env*.local
+*.env
+contracts/.env
 
 # Vercel
 .vercel
@@ -36,3 +40,30 @@ next-env.d.ts
 artifacts/
 cache/
 typechain-types/
+
+# Relayer logs
+relayer-error.log
+relayer-combined.log
+relayer/dist/
+relayer/test.ts
+relayer/verify-only.ts
+
+# Claude Code
+.claude/
+
+# Chopsticks
+chopsticks-sandbox/
+
+# Simulation debug files
+simulation/debug*.log
+simulation/debug*.json
+simulation/*_dump.json
+simulation/*_run*.log
+simulation/debug-*.js
+
+# PM2
+.pm2/
+
+# Temporary files
+*.tmp
+*.temp

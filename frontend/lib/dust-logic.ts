@@ -1,8 +1,49 @@
 import { BN } from "@polkadot/util";
 
+// =========================================================================
+// CRITICAL: Decimal Conversion for Revive
+// =========================================================================
+// Substrate (Polkadot/AssetHub): DOT has 10 decimals (1 DOT = 10^10 plancks)
+// Revive (EVM on Asset Hub): DOT has 18 decimals (1 DOT = 10^18 wei-like units)
+//
+// When passing DOT amounts to Revive smart contracts, must convert:
+// reviveDOT = substrateDOT * 10^8
+// =========================================================================
+
+/**
+ * Convert Substrate DOT amount (10 decimals) to Revive DOT amount (18 decimals)
+ * @param substrateAmount Amount in Substrate plancks (10 decimals)
+ * @returns Amount in Revive wei-like units (18 decimals)
+ */
+export function toReviveDecimals(substrateAmount: bigint): bigint {
+    // Multiply by 10^8 to convert from 10 decimals to 18 decimals
+    return substrateAmount * BigInt(10 ** 8);
+}
+
+/**
+ * Convert Revive DOT amount (18 decimals) to Substrate DOT amount (10 decimals)
+ * @param reviveAmount Amount in Revive wei-like units (18 decimals)
+ * @returns Amount in Substrate plancks (10 decimals)
+ */
+export function fromReviveDecimals(reviveAmount: bigint): bigint {
+    // Divide by 10^8 to convert from 18 decimals to 10 decimals
+    return reviveAmount / BigInt(10 ** 8);
+}
+
+/**
+ * Convert human-readable DOT to Revive decimals
+ * @param dotAmount Human-readable DOT (e.g., 1.5 DOT)
+ * @returns Amount in Revive wei-like units (18 decimals)
+ */
+export function dotToRevive(dotAmount: number): bigint {
+    // 1 DOT = 10^18 in Revive
+    return BigInt(Math.floor(dotAmount * 10 ** 18));
+}
+
 // Constants
 export const MIN_BATCH_VALUE_DOT = 0.05;
-const DOT_DECIMALS = 10;
+const DOT_DECIMALS_SUBSTRATE = 10;  // Substrate (Polkadot, Asset Hub)
+const DOT_DECIMALS_REVIVE = 18;     // Revive (EVM on Asset Hub)
 const COMMISSION_RATE = 0.05; // 5%
 
 export interface AssetCandidate {
@@ -85,7 +126,8 @@ export function analyzePurgeability(assets: AssetCandidate[]): PurgeDecision {
     if (valueAfterFees <= 0) {
         return {
             status: "BURN",
-            reason: `Fees (${totalFees.toFixed(3)} DOT) exceed asset value due to ${tier.replace('_', ' ')} complexity.`
+            reason: `Fees (${totalFees.toFixed(3)} DOT) exceed asset value due to ${tier.replace('_', ' ')} complexity.`,
+            netValue: valueAfterFees
         };
     }
     
@@ -94,7 +136,8 @@ export function analyzePurgeability(assets: AssetCandidate[]): PurgeDecision {
     if (valueAfterFees < 0.05) {
         return {
             status: "BURN",
-            reason: `Net value (${valueAfterFees.toFixed(3)} DOT) is below the 0.05 threshold after complexity adjustments.`
+            reason: `Net value (${valueAfterFees.toFixed(3)} DOT) is below the 0.05 threshold after complexity adjustments.`,
+            netValue: valueAfterFees
         };
     }
   }

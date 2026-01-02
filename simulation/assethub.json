@@ -1,0 +1,4 @@
+{
+  "endpoint": "wss://westend-asset-hub-rpc.polkadot.io",
+  "port": 8003
+}
