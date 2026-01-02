@@ -1,4 +1,4 @@
-# The PolkaPurge Journey 🚀
+# The dotdotdust Journey 🚀
 
 **A Deep Dive into Building a Cross-Chain Dust Sweeper for Polkadot**
 
@@ -23,7 +23,7 @@
 
 ## Executive Summary
 
-PolkaPurge started as a simple idea: "What if users could consolidate their dust balances across Polkadot parachains with one click?"
+dotdotdust started as a simple idea: "What if users could consolidate their dust balances across Polkadot parachains with one click?"
 
 After 20 days of intensive development, we've built a production-ready system that:
 - Supports 7 major parachains (Polkadot, Astar, Hydration, Moonbeam, Acala, Bifrost, Interlay)
@@ -64,7 +64,7 @@ Polkadot's Existential Deposit (ED) mechanism adds another layer of complexity:
 - Dust often sits *just above* ED - enough to prevent reaping, not enough to be useful
 - Non-sufficient assets (tokens that don't pay for their own existence) require native DOT to survive
 
-**PolkaPurge solves all of this with one click.**
+**dotdotdust solves all of this with one click.**
 
 ---
 
@@ -545,7 +545,7 @@ const signature = await wallet.signMessage(message); // EIP-191
 
 **Step 4: Send to Relayer**
 ```http
-POST https://relayer.polkapurge.io/purge
+POST https://relayer.dotdotdust.io/purge
 {
     "userAddress": "0x1234...5678",
     "assets": ["0xASTR...", "0xHDX..."],
@@ -719,7 +719,7 @@ function sweepToUSDC(
 - Clutter wallets
 
 **Solution:**
-- Batch transfer to PolkaPurge vault
+- Batch transfer to dotdotdust vault
 - Auction weekly (10,000 NFTs → one sale)
 - Distribute proceeds to users (pro-rata)
 
@@ -757,7 +757,7 @@ function sweepNFTs(
 
 ### Quick Wins
 
-If you're forking PolkaPurge or building something similar, here are the low-hanging fruits:
+If you're forking dotdotdust or building something similar, here are the low-hanging fruits:
 
 **1. Add More Chains (1-2 days each)**
 - Copy chain config from `chain-service.ts`
@@ -856,7 +856,7 @@ pm2 start ecosystem.config.js --env testnet
 
 # 4. Test frontend
 cd ../frontend
-NEXT_PUBLIC_RELAYER_URL=https://testnet-relayer.polkapurge.io npm run dev
+NEXT_PUBLIC_RELAYER_URL=https://testnet-relayer.dotdotdust.io npm run dev
 
 # 5. Execute test purge
 # (manual step in UI - connect wallet, scan balances, purge)
@@ -877,7 +877,7 @@ NEXT_PUBLIC_RELAYER_URL=https://testnet-relayer.polkapurge.io npm run dev
 
 ## Closing Thoughts
 
-Building PolkaPurge has been a masterclass in cross-chain development, security, and ecosystem thinking.
+Building dotdotdust has been a masterclass in cross-chain development, security, and ecosystem thinking.
 
 **What worked:**
 - Security-first mindset from Day 1
@@ -897,16 +897,16 @@ Building PolkaPurge has been a masterclass in cross-chain development, security,
 - Mainnet launch (Q2 2025)
 - Ecosystem integrations (Q3 2025)
 
-If you've read this far, thank you. PolkaPurge is more than code - it's a bet that Polkadot's multi-chain future needs better UX infrastructure. We're building the tools that make interoperability feel seamless.
+If you've read this far, thank you. dotdotdust is more than code - it's a bet that Polkadot's multi-chain future needs better UX infrastructure. We're building the tools that make interoperability feel seamless.
 
 **Want to contribute?** See [CONTRIBUTING.md](CONTRIBUTING.md) or open an issue on GitHub.
 
-**Want to chat?** Find me on Twitter [@PolkaPurge](https://twitter.com/polkapurge) (coming soon).
+**Want to chat?** Find me on Twitter [@dotdotdust](https://twitter.com/dotdotdust) (coming soon).
 
 ---
 
 *"In crypto, dust is inevitable. Purging it shouldn't be."*
 
-**— The PolkaPurge Team**
+**— The dotdotdust Team**
 
 *Last updated: 2026-01-01*

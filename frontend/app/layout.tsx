@@ -13,12 +13,12 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "PolkaPurge - Dust Sweeper for Polkadot",
+  title: "dotdotdust - Dust Sweeper for Polkadot",
   description: "Consolidate dust balances from 7 parachains (Polkadot, Astar, Hydration, Moonbeam, Acala, Bifrost, Interlay) into DOT with one click. Powered by Revive smart contracts.",
   keywords: ["Polkadot", "Dust", "XCM", "DOT", "Astar", "Hydration", "Moonbeam", "Acala", "Bifrost", "Interlay", "Revive", "DeFi"],
-  authors: [{ name: "PolkaPurge" }],
+  authors: [{ name: "dotdotdust" }],
   openGraph: {
-    title: "PolkaPurge - Dust Sweeper for Polkadot",
+    title: "dotdotdust - Dust Sweeper for Polkadot",
     description: "Consolidate dust balances from 7 parachains into DOT - stay in the Polkadot ecosystem",
     type: "website",
   },

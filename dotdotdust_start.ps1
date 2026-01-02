@@ -1,6 +1,6 @@
 <#
     .SYNOPSIS
-    Unifies the PolkaPurge Simulation Startup (Orchestra -> Mint -> Frontend).
+    Unifies the dotdotdust Simulation Startup (Orchestra -> Mint -> Frontend).
 
     .DESCRIPTION
     1. Kills any zombie node processes on ports 8000-8003 & 3000.

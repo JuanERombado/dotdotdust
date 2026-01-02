@@ -1,8 +1,8 @@
-# PolkaPurge 🧹
+# dotdotdust 🧹
 
 **One-Click Dust Consolidation Across the Polkadot Ecosystem**
 
-PolkaPurge is a production-ready cross-chain dust sweeper that consolidates small token balances from 7 Polkadot parachains into DOT on Asset Hub. Built with Polkadot Revive smart contracts and XCM V5.
+dotdotdust is a production-ready cross-chain dust sweeper that consolidates small token balances from 7 Polkadot parachains into DOT on Asset Hub. Built with Polkadot Revive smart contracts and XCM V5.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Solidity](https://img.shields.io/badge/Solidity-0.8.24-blue)](https://soliditylang.org/)
@@ -22,7 +22,7 @@ Users accumulate small, unusable token balances ("dust") across multiple Polkado
 
 ## 💡 Solution
 
-PolkaPurge provides a **one-click solution** to:
+dotdotdust provides a **one-click solution** to:
 1. Scan all your balances across 7 parachains
 2. Calculate optimal routing and fees
 3. Execute sponsored XCM transactions (optional)
@@ -117,7 +117,7 @@ PolkaPurge provides a **one-click solution** to:
 ## 📦 Repository Structure
 
 ```
-polkapurge/
+dotdotdust/
 ├── contracts/              # Solidity smart contracts (Revive)
 │   ├── contracts/
 │   │   ├── Sweeper.sol    # Main contract (400 lines)
@@ -358,14 +358,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## 📞 Contact & Support
 
 - **GitHub Issues**: [Report bugs or request features](https://github.com/JuanERombado/dotdotdust/issues)
-- **Twitter**: [@PolkaPurge](https://twitter.com/polkapurge) (coming soon)
-- **Discord**: [Join our community](https://discord.gg/polkapurge) (coming soon)
+- **Twitter**: [@dotdotdust](https://twitter.com/dotdotdust) (coming soon)
+- **Discord**: [Join our community](https://discord.gg/dotdotdust) (coming soon)
 
 ---
 
 ## ⚡ Quick Links
 
-- [Live Demo](https://polkapurge.vercel.app) (coming soon)
+- [Live Demo](https://dotdotdust.vercel.app) (coming soon)
 - [API Documentation](docs/API.md)
 - [Roadmap](https://github.com/JuanERombado/dotdotdust/projects/1)
 

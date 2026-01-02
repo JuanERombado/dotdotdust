@@ -1,7 +1,7 @@
 module.exports = {
   apps: [
     {
-      name: "polkapurge-relayer",
+      name: "dotdotdust-relayer",
       script: "dist/index.js",
       instances: 1, // Single instance to avoid nonce conflicts
       autorestart: true,
@@ -43,8 +43,8 @@ module.exports = {
       user: "deploy",
       host: ["your-vps-ip"],
       ref: "origin/main",
-      repo: "git@github.com:yourusername/polkapurge.git",
-      path: "/var/www/polkapurge-relayer",
+      repo: "git@github.com:yourusername/dotdotdust.git",
+      path: "/var/www/dotdotdust-relayer",
       "post-deploy": "cd relayer && npm install && npm run build && pm2 reload ecosystem.config.js --env production",
       env: {
         NODE_ENV: "production"

@@ -1,7 +1,7 @@
-# PolkaPurge Handoff Manifest (Internal Sync)
+# dotdotdust Handoff Manifest (Internal Sync)
 
 ## 🎯 Project Vision
-PolkaPurge is a "Dust Sweeper" for the Polkadot ecosystem. It allows users to batch-teleport small, unusable balances (Dust) from various Parachains (Astar, Hydration, Moonbeam) to **Westend Asset Hub**, where a **Revive (Solidity/RISC-V)** smart contract swaps them into DOT via an Omnipool-Relayer mechanism.
+dotdotdust is a "Dust Sweeper" for the Polkadot ecosystem. It allows users to batch-teleport small, unusable balances (Dust) from various Parachains (Astar, Hydration, Moonbeam) to **Westend Asset Hub**, where a **Revive (Solidity/RISC-V)** smart contract swaps them into DOT via an Omnipool-Relayer mechanism.
 
 ---
 
@@ -27,7 +27,7 @@ PolkaPurge is a "Dust Sweeper" for the Polkadot ecosystem. It allows users to ba
 
 ## ⚡ The "One-Click" Stability Package
 To prevent "retracing steps," always start the project using:
-`c:\Users\jromb\VibeCoded Projects\PolkaPurge\polkapurge_start.ps1`
+`c:\Users\jromb\VibeCoded Projects\dotdotdust\dotdotdust_start.ps1`
 
 ### Script Contents (Reference):
 ```powershell
@@ -60,6 +60,6 @@ npm run dev
 ---
 
 ## 🚀 Handoff Instructions for New Agent
-1. **Startup**: Run `polkapurge_start.ps1`.
+1. **Startup**: Run `dotdotdust_start.ps1`.
 2. **Identity**: Do not force "Alice" in the frontend logic; the current code respects the user's connected wallet while using sim-signing.
 3. **Next Task**: Focus on "Phase 8: UX Redesign" (Frosted Glass / Software for Sovereignty aesthetics) until the Jan 20th smart contract live-date.

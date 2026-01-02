@@ -1,5 +1,5 @@
 # orchestra.ps1
-# Runs 4 parallel Chopsticks instances to simulate the full PolkaPurge ecosystem.
+# Runs 4 parallel Chopsticks instances to simulate the full dotdotdust ecosystem.
 
 Write-Host "The One Block Orchestra is starting..." -ForegroundColor Cyan
 
