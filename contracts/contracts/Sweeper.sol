@@ -11,10 +11,14 @@ contract Sweeper is Ownable, ReentrancyGuard {
     // -------------------------------------------------------------------------
     address public constant XCM_PRECOMPILE = address(0x00000000000000000000000000000000000a0000);
     uint256 public constant COMMISSION_BPS = 500; // 5%
+    uint256 public constant SLIPPAGE_TOLERANCE_BPS = 300; // 3% slippage tolerance for DEX swaps
     address public feeCollector;
     mapping(address => bool) public isRelayer;
     uint256 public gasTank;
     uint256 public collectedFees; // Track accumulated fees
+
+    // Nonce management for signature verification (prevents replay attacks)
+    mapping(address => uint256) public nonces;
 
     // Limits
     uint256 public constant MIN_BATCH_VALUE_DOT = 5000000000; // 0.05 DOT (10 decimals in Substrate)
@@ -30,6 +34,7 @@ contract Sweeper is Ownable, ReentrancyGuard {
     event RelayerAdded(address indexed relayer);
     event RelayerRemoved(address indexed relayer);
     event GasDeposited(address indexed from, uint256 amount);
+    event NonceUsed(address indexed user, uint256 nonce);
 
     // -------------------------------------------------------------------------
     // Constructor
@@ -151,10 +156,16 @@ contract Sweeper is Ownable, ReentrancyGuard {
             require(amounts[i] > 0, "Zero amount");
         }
 
-        // TODO: Implement signature verification
-        // This should verify that 'user' signed a message authorizing this sweep
-        // Include nonce and expiry to prevent replay attacks
-        // verifySignature(user, assets, amounts, signature);
+        // Verify signature with current nonce (prevents replay attacks)
+        uint256 currentNonce = nonces[user];
+        require(
+            verifySignature(user, assets, amounts, currentNonce, signature),
+            "Invalid signature"
+        );
+
+        // Increment nonce to prevent replay
+        nonces[user] = currentNonce + 1;
+        emit NonceUsed(user, currentNonce);
 
         // Calculate total batch value (simplified - in production, query oracle)
         // For now, we'll deduct a flat commission from gas tank
@@ -236,7 +247,14 @@ contract Sweeper is Ownable, ReentrancyGuard {
             encodeBuyExecution(assetIn, amountIn / 10), // 10% for fees
 
             // Instruction 3: Transact (call Hydration swap)
-            encodeHydrationSwap(assetIn, amountIn * 9 / 10, 10), // USDC asset ID = 10 (example)
+            // Note: expectedAmountOut should come from oracle/price feed in production
+            // For now, using simplified 1:1 ratio as placeholder
+            encodeHydrationSwap(
+                assetIn,
+                amountIn * 9 / 10,
+                10,  // USDC asset ID (example)
+                uint128(amountIn * 9 / 10)  // Expected out (placeholder - use oracle in production)
+            ),
 
             // Instruction 4: DepositAsset (send USDC to user)
             encodeDepositAsset(10, beneficiary) // USDC asset ID
@@ -276,8 +294,14 @@ contract Sweeper is Ownable, ReentrancyGuard {
      * @param assetIn Input asset ID
      * @param amountIn Input amount
      * @param assetOut Output asset ID (USDC)
+     * @param expectedAmountOut Expected output amount (for slippage calculation)
      */
-    function encodeHydrationSwap(uint32 assetIn, uint128 amountIn, uint32 assetOut) internal pure returns (bytes memory) {
+    function encodeHydrationSwap(
+        uint32 assetIn,
+        uint128 amountIn,
+        uint32 assetOut,
+        uint128 expectedAmountOut
+    ) internal pure returns (bytes memory) {
         // Transact instruction to call Hydration's router.swap()
         //
         // This calls: router.swap(asset_in, asset_out, amount_in, min_amount_out)
@@ -287,13 +311,19 @@ contract Sweeper is Ownable, ReentrancyGuard {
         // 2. Getting the exact pallet index and call index for router.swap
         // 3. Testing on Hydration testnet
 
+        // Calculate minimum output with slippage tolerance (3%)
+        // minOut = expectedOut * (10000 - slippageBPS) / 10000
+        uint128 minAmountOut = uint128(
+            (uint256(expectedAmountOut) * (10000 - SLIPPAGE_TOLERANCE_BPS)) / 10000
+        );
+
         bytes memory call = abi.encodePacked(
-            hex"46",      // Pallet index (EXAMPLE - verify from Hydration metadata)
-            hex"00",      // Call index for swap (EXAMPLE - verify from metadata)
-            assetIn,      // Asset in
-            assetOut,     // Asset out (USDC)
-            amountIn,     // Amount in
-            uint128(0)    // Min amount out (0 = no slippage protection, adjust in production)
+            hex"43",        // Router pallet index = 67 (VERIFIED from Hydration runtime v360)
+            hex"00",        // Call index for swap (TODO - verify from metadata)
+            assetIn,        // Asset in
+            assetOut,       // Asset out (USDC)
+            amountIn,       // Amount in
+            minAmountOut    // Min amount out (3% slippage protection)
         );
 
         return abi.encodePacked(
@@ -352,8 +382,9 @@ contract Sweeper is Ownable, ReentrancyGuard {
         // 3. Test weight limits and adjust as needed
         // 4. Add slippage protection (min_amount_out)
 
-        // Map sender to Substrate AccountId32 for beneficiary
-        bytes32 beneficiary = bytes32(uint256(uint160(msg.sender))); // Simplified mapping
+        // Map EVM address to Substrate AccountId32 for beneficiary
+        // Revive mapping: 20-byte EVM address + 12 bytes of 0xEE padding
+        bytes32 beneficiary = evmToAccountId32(msg.sender);
 
         // Build XCM payload (currently uses DOT asset ID = 0 as example)
         uint32 assetInId = 0; // DOT on Hydration (verify actual ID)
@@ -368,6 +399,100 @@ contract Sweeper is Ownable, ReentrancyGuard {
         IXCM(XCM_PRECOMPILE).send(destination, xcmPayload);
 
         emit Swept(msg.sender, assets.length, "Hydration Omnipool -> USDC");
+    }
+
+    // =========================================================================
+    // ADDRESS CONVERSION HELPERS
+    // =========================================================================
+
+    /**
+     * @notice Convert EVM address (20 bytes) to Substrate AccountId32 (32 bytes)
+     * @param evmAddress The 20-byte EVM address
+     * @return bytes32 The 32-byte AccountId32 for Substrate chains
+     *
+     * @dev Revive uses deterministic address mapping:
+     *      - First 20 bytes: EVM address
+     *      - Last 12 bytes: 0xEEEEEEEEEEEEEEEEEEEEEEEE (padding)
+     *
+     *      This mapping ensures EVM accounts can be represented in Substrate's
+     *      32-byte AccountId32 format while maintaining a unique identifier
+     */
+    function evmToAccountId32(address evmAddress) internal pure returns (bytes32) {
+        // Convert address to bytes32, padding with 0xEE bytes at the end
+        // Format: [20 bytes EVM address][12 bytes 0xEE padding]
+        bytes32 accountId;
+
+        assembly {
+            // Store the address in the first 20 bytes
+            accountId := evmAddress
+
+            // Shift left by 96 bits (12 bytes) to make room for padding
+            accountId := shl(96, accountId)
+
+            // Add 0xEE padding in the last 12 bytes
+            // 0xEEEEEEEEEEEEEEEEEEEEEEEE = 12 bytes of 0xEE
+            accountId := or(accountId, 0xEEEEEEEEEEEEEEEEEEEEEEEE)
+        }
+
+        return accountId;
+    }
+
+    // =========================================================================
+    // SIGNATURE VERIFICATION
+    // =========================================================================
+
+    /**
+     * @notice Verify EIP-191 signature for meta-transaction
+     * @param user The user address that should have signed the message
+     * @param assets Array of asset addresses to sweep
+     * @param amounts Array of amounts corresponding to assets
+     * @param nonce Current nonce for the user (prevents replay attacks)
+     * @param signature The signature bytes (65 bytes: r, s, v)
+     * @return bool True if signature is valid
+     *
+     * @dev Message format: keccak256(abi.encodePacked(user, assets, amounts, nonce))
+     *      Signed with EIP-191: "\x19Ethereum Signed Message:\n32" + messageHash
+     */
+    function verifySignature(
+        address user,
+        address[] memory assets,
+        uint256[] memory amounts,
+        uint256 nonce,
+        bytes memory signature
+    ) internal pure returns (bool) {
+        require(signature.length == 65, "Invalid signature length");
+
+        // Build the message hash
+        bytes32 messageHash = keccak256(abi.encodePacked(user, assets, amounts, nonce));
+
+        // Add EIP-191 prefix
+        bytes32 ethSignedMessageHash = keccak256(
+            abi.encodePacked("\x19Ethereum Signed Message:\n32", messageHash)
+        );
+
+        // Extract r, s, v from signature
+        bytes32 r;
+        bytes32 s;
+        uint8 v;
+
+        assembly {
+            r := mload(add(signature, 32))
+            s := mload(add(signature, 64))
+            v := byte(0, mload(add(signature, 96)))
+        }
+
+        // Ensure v is 27 or 28 (standard for Ethereum signatures)
+        if (v < 27) {
+            v += 27;
+        }
+
+        require(v == 27 || v == 28, "Invalid signature 'v' value");
+
+        // Recover signer address from signature
+        address signer = ecrecover(ethSignedMessageHash, v, r, s);
+
+        // Verify signer matches user and is not zero address
+        return (signer != address(0) && signer == user);
     }
 
     /**

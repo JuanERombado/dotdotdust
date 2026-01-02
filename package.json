@@ -1,0 +1,27 @@
+{
+  "name": "dotdotdust",
+  "version": "1.0.0",
+  "description": "Cross-chain dust consolidation protocol for Polkadot",
+  "scripts": {
+    "verify": "npx ts-node pre-launch-verification.ts",
+    "get-params": "npx ts-node get-hydration-params.ts",
+    "integration-test": "cd simulation && npx ts-node integration-test.ts",
+    "test:contracts": "cd contracts && npx hardhat test",
+    "test:all": "npm run verify && npm run test:contracts",
+    "deploy:westend": "cd contracts && npx hardhat run scripts/deploy.ts --network westend",
+    "dev:frontend": "cd frontend && npm run dev",
+    "dev:relayer": "cd relayer && npm run dev",
+    "dev:simulation": "cd simulation && node start-orchestra.js"
+  },
+  "dependencies": {
+    "@polkadot/api": "^16.5.4",
+    "@polkadot/keyring": "^13.2.3",
+    "@polkadot/util": "^13.2.3",
+    "@polkadot/util-crypto": "^13.2.3",
+    "typescript": "^5.7.2",
+    "ts-node": "^10.9.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}

@@ -1,6 +1,6 @@
 import { expect } from "chai";
 import { ethers } from "hardhat";
-import { Sweeper } from "../typechain-types";
+import type { Sweeper } from "../typechain-types/contracts/Sweeper";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 
 describe("Sweeper Contract", function () {
