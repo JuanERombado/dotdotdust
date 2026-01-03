@@ -252,12 +252,12 @@ contract Sweeper is Ownable, ReentrancyGuard {
             encodeHydrationSwap(
                 assetIn,
                 amountIn * 9 / 10,
-                10,  // USDC asset ID (example)
+                22,  // USDC asset ID = 22 (VERIFIED from Hydration, 6 decimals)
                 uint128(amountIn * 9 / 10)  // Expected out (placeholder - use oracle in production)
             ),
 
             // Instruction 4: DepositAsset (send USDC to user)
-            encodeDepositAsset(10, beneficiary) // USDC asset ID
+            encodeDepositAsset(22, beneficiary) // USDC asset ID = 22 (VERIFIED)
         );
 
         return xcm;
@@ -386,8 +386,8 @@ contract Sweeper is Ownable, ReentrancyGuard {
         // Revive mapping: 20-byte EVM address + 12 bytes of 0xEE padding
         bytes32 beneficiary = evmToAccountId32(msg.sender);
 
-        // Build XCM payload (currently uses DOT asset ID = 0 as example)
-        uint32 assetInId = 0; // DOT on Hydration (verify actual ID)
+        // Build XCM payload with verified DOT asset ID
+        uint32 assetInId = 5; // DOT on Hydration (VERIFIED: 10 decimals)
         uint128 amountToSwap = uint128(xcmGas); // Amount after commission
 
         bytes memory xcmPayload = buildSwapToUSDCPayload(assetInId, amountToSwap, beneficiary);
